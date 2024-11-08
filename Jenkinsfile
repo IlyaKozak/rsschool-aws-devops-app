@@ -2,24 +2,37 @@ pipeline {
   agent any
 
   environment {
-    // KUBECONFIG = credentials('kubeconfig-credential-id') // Replace with your Jenkins Kubeconfig credential ID
+    HELM_VERSION = "v3.16.2"
     HELM_RELEASE_NAME = "wordpress"
+    HELM_INSTALL_DIR = "${env.HOME}/bin"
+    PATH = "${env.HELM_INSTALL_DIR}:${env.PATH}"
     NAMESPACE = "wordpress"
   }
 
   stages {
     stage('Install Helm') {
       steps {
-        sh 'curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash'
+        sh '''
+        mkdir -p $HELM_INSTALL_DIR
+        
+        # Download Helm archive
+        curl -sSL https://get.helm.sh/helm-$HELM_VERSION-linux-arm64.tar.gz -o helm.tar.gz
+
+        # Extract the binary and move it to the installation directory
+        tar -xzvf helm.tar.gz linux-arm64/helm --strip-components=1
+        mv helm $HELM_INSTALL_DIR/helm
+        
+        echo "Helm installed to $HELM_INSTALL_DIR and added to PATH"
+        
+        # Clean up
+        rm -f helm.tar.gz
+        '''
       }
     }
 
-    stage('Add Helm Repositories') {
+    stage('Verify Helm') {
       steps {
-        sh '''
-          helm repo add bitnami https://charts.bitnami.com/bitnami
-          helm repo update
-        '''
+        sh 'helm version'
       }
     }
 
@@ -29,36 +42,14 @@ pipeline {
       }
     }
 
-    stage('Deploy WordPress with Traefik Ingress') {
+    stage('Install App') {
       steps {
-        script {
-          def helmValues = """
-          ingress:
-            enabled: true
-            hostname: wordpress.kozak.day
-            annotations:
-              traefik.ingress.kubernetes.io/router.entrypoints: web
-            ingressClassName: "traefik"
-          """
-
-          writeFile file: 'values.yaml', text: helmValues
-          
-          sh """
-              kubectl create namespace ${NAMESPACE} || true
-              helm upgrade --install ${HELM_RELEASE_NAME} bitnami/wordpress \\
-                --namespace ${NAMESPACE} \\
-                -f values.yaml
-          """
-        }
+        sh 'helm install my-nginx ./wordpress'
       }
     }
   }
 
   post {
-    always {
-      // Clean up generated files
-      sh 'rm -f values.yaml'
-    }
     success {
       echo 'Deployment completed successfully!'
     }
