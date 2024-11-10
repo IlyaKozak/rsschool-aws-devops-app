@@ -37,7 +37,7 @@ pipeline {
 
     stage('Install Custom Helm Chart') {
       steps {
-        sh 'helm install custom-wordpress ./custom-wordpress --namespace custom-wordpress --create-namespace'
+        sh '`helm upgrade --install wordpress ./wordpress --namespace wordpress --create-namespace'
       }
     }
   }

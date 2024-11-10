@@ -1,4 +1,0 @@
-replicaCount: 1
-
-wordpressConfigExtra: |
-  $_SERVER['HTTPS'] = 'on';
