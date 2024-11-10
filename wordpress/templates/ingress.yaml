@@ -1,3 +1,4 @@
+{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -7,13 +8,14 @@ metadata:
     app: {{ .Release.Name }}-wordpress
 spec:
   rules:
-    - host: "wordpress.kozak.day"
+    - host: {{ .Values.ingress.hostname }}
       http:
         paths:
-          - path: /
-            pathType: ImplementationSpecific
+          - path: {{ .Values.ingress.path }}
+            pathType: {{ .Values.ingress.pathType }}
             backend:
               service:
                 name: {{ .Release.Name }}-wordpress
                 port:
-                  name: http
+                  name: {{ .Values.wordpress.portName }}
+{{- end }}

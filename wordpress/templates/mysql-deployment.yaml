@@ -6,7 +6,7 @@ metadata:
   labels:
     app: {{ .Release.Name }}-wordpress
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.mysql.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}-wordpress
@@ -20,25 +20,25 @@ spec:
         tier: {{ .Release.Name }}-mysql
     spec:
       containers:
-      - image: mysql:8.0
+      - image: {{ .Values.mysql.image }}:{{ .Values.mysql.tag }}
         name: mysql
         env:
-        - name: MYSQL_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Release.Name }}-mysql
-              key: rootpassword
         - name: MYSQL_DATABASE
-          value: wordpress
+          value: {{ .Values.mysql.db }}
         - name: MYSQL_USER
-          value: wordpress
+          value: {{ .Values.mysql.user }}
         - name: MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ .Release.Name }}-mysql
               key: password
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-mysql
+              key: rootpassword
         ports:
-        - containerPort: 3306
+        - containerPort: {{ .Values.mysql.port }}
           name: mysql
         volumeMounts:
         - name: mysql-persistent-storage

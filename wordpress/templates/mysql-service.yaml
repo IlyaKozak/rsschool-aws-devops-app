@@ -7,8 +7,9 @@ metadata:
     app: {{ .Release.Name }}-wordpress
 spec:
   ports:
-    - port: 3306
-      name: mysql
+    - name: {{ .Values.mysql.portName }}
+      port: {{ .Values.mysql.servicePort }}
+      targetPort: {{ .Values.mysql.port }}
   selector:
     app: {{ .Release.Name }}-wordpress
     tier: {{ .Release.Name }}-mysql

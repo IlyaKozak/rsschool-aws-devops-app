@@ -7,8 +7,9 @@ metadata:
     app: {{ .Release.Name }}-wordpress
 spec:
   ports:
-    - port: 80
-      name: http
+    - name: {{ .Values.wordpress.portName }}
+      port: {{ .Values.wordpress.servicePort }}
+      targetPort: {{ .Values.wordpress.port }}
   selector:
     app: {{ .Release.Name }}-wordpress
     tier: {{ .Release.Name }}-frontend

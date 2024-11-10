@@ -1,7 +1,32 @@
-replicaCount: 1
+wordpress:
+  replicaCount: 1
+  image: wordpress
+  tag: 6.6.2-apache
+  port: 80
+  servicePort: 80
+  portName: http
+  pvcSize: 3Gi
+  # https in WordPress Address and Site Address behind reverse proxy with ssl termination
+  # https://github.com/bitnami/charts/issues/18959
+  # https://developer.wordpress.org/advanced-administration/security/https/#using-a-reverse-proxy
+  configExtra: | 
+    $_SERVER['HTTPS'] = 'on';
+    
+mysql:
+  replicaCount: 1
+  image: mysql
+  tag: "8.0"
+  port: 3306
+  servicePort: 3306
+  portName: http
+  pvcSize: 3Gi
+  db: wordpress
+  user: wordpress
+  rootPass: "WEJYYVdzT0RCag=="
+  pass: "dU5LZG92VDZDVQ=="
 
-
-# 
-# https://github.com/bitnami/charts/issues/18959
-# https://github.com/docker-library/wordpress/pull/142
-# https://developer.wordpress.org/advanced-administration/security/https/#using-a-reverse-proxy
+ingress:
+  enabled: true
+  hostname: wordpress.kozak.day
+  path: /
+  pathType: ImplementationSpecific
