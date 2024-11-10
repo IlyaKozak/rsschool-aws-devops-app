@@ -32,6 +32,8 @@ spec:
             secretKeyRef:
               name: {{ .Release.Name }}-mysql
               key: password
+        - name: WORDPRESS_CONFIG_EXTRA
+          value: {{ .Values.wordpressConfigExtra }}
         ports:
         - containerPort: 80
           name: wordpress
