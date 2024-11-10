@@ -29,15 +29,15 @@ pipeline {
       }
     }
 
-    stage('Checkout Repo Code') {
+    stage('Checkout Repo') {
       steps {
         checkout scm
       }
     }
 
-    stage('Install Custom Helm Chart') {
+    stage('Install Helm Chart') {
       steps {
-        sh '`helm upgrade --install wordpress ./wordpress --namespace wordpress --create-namespace'
+        sh 'helm upgrade --install wordpress ./wordpress --namespace wordpress --create-namespace'
       }
     }
   }
