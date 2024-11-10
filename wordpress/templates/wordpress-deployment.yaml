@@ -32,8 +32,9 @@ spec:
             secretKeyRef:
               name: {{ .Release.Name }}-mysql
               key: password
-        # - name: WORDPRESS_CONFIG_EXTRA
-        #   value: "$_SERVER['HTTPS'] = 'on';"
+        - name: WORDPRESS_CONFIG_EXTRA
+          value: |
+            $_SERVER['HTTPS'] = 'on';
         ports:
         - containerPort: 80
           name: wordpress
