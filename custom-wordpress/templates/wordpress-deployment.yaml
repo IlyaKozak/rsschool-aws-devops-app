@@ -18,6 +18,7 @@ spec:
         app: {{ .Release.Name }}-wordpress
         tier: {{ .Release.Name }}-frontend
     spec:
+      replicas: {{ .Values.replicaCount }}
       containers:
       - image: wordpress:6.2.1-apache
         name: wordpress
@@ -40,4 +41,4 @@ spec:
       volumes:
       - name: wordpress-persistent-storage
         persistentVolumeClaim:
-          claimName: {{ .Release.Name }}-claim
+          claimName: {{ .Release.Name }}-wordpress-claim
