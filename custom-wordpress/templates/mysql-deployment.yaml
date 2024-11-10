@@ -6,6 +6,7 @@ metadata:
   labels:
     app: {{ .Release.Name }}-wordpress
 spec:
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}-wordpress
@@ -25,8 +26,8 @@ spec:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mysql-pass
-              key: password
+              name: {{ .Release.Name }}-mysql
+              key: rootpassword
         - name: MYSQL_DATABASE
           value: wordpress
         - name: MYSQL_USER
@@ -34,7 +35,7 @@ spec:
         - name: MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mysql-pass
+              name: {{ .Release.Name }}-mysql
               key: password
         ports:
         - containerPort: 3306
