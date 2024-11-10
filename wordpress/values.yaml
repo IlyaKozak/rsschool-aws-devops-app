@@ -9,7 +9,7 @@ wordpress:
   # https in WordPress Address and Site Address behind reverse proxy with ssl termination
   # https://github.com/bitnami/charts/issues/18959
   # https://developer.wordpress.org/advanced-administration/security/https/#using-a-reverse-proxy
-  configExtra: | 
+  configExtra: |
     $_SERVER['HTTPS'] = 'on';
     
 mysql:
@@ -30,3 +30,5 @@ ingress:
   hostname: wordpress.kozak.day
   path: /
   pathType: ImplementationSpecific
+  annotations: 
+    traefik.ingress.kubernetes.io/router.entrypoints: web
