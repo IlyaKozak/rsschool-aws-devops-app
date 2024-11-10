@@ -1,1 +1,14 @@
+CHART NAME: {{ .Chart.Name }}
+CHART VERSION: {{ .Chart.Version }}
+APP VERSION: {{ .Chart.AppVersion }}
 
+** Please be patient while the chart is being deployed **
+
+Access the pod you want to debug by executing:
+kubectl exec --namespace {{ .Release.Namespace }} -it <NAME OF THE POD> -- sh
+
+Your WordPress site can be accessed through the following DNS name from within your cluster:
+{{ .Release.Name }}-wordpress.{{ .Release.Namespace }}.svc.cluster.local (port {{ .Values.service.ports.http }})
+
+To access your WordPress site from the Internet go to:
+{{ .Values.ingress.hostname }}
