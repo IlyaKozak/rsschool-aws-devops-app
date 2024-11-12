@@ -1,7 +1,5 @@
 ## RS School AWS DevOps Course - App
 
-### _Applications_
-
 **Project Structure:**
 
 ```
@@ -15,13 +13,18 @@
 └──Jenkinsfile              <- Jenkins Pipeline definition
 ```
 
-### Task 5 - Simple Application Deployment with Helm
+<details>
+<summary><bold>Task 5 - Simple Application Deployment with Helm</bold></summary>
 
 - Helm chart for WordPress app is created
 - WordPress Helm chart deployed to k3s kubernetes cluster via Jenkins CI/CD Pipeline
 - WordPress app is accessible via Internet => Nginx reverse proxy => Traefik ingress conroller => Wordpress service in private subnet
 
 For more details please see PR: https://github.com/IlyaKozak/rsschool-aws-devops-app/pull/1
+
+</details>
+
+<hr />
 
 **Helm Chart Deploy Diagram:**  
 ![Diagram](tasks-images/task5-diagram.png)
