@@ -11,8 +11,6 @@ spec:
     matchLabels:
       app: {{ .Release.Name }}-wordpress
       tier: {{ .Release.Name }}-mysql
-  strategy:
-    type: Recreate
   template:
     metadata:
       labels:
