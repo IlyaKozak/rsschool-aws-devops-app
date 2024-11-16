@@ -1,11 +1,11 @@
-const express = require('express');
-// const healthRouter = require('./routes/health');
+import express from 'express';
+import { router as healthRouter } from './routes/health.js';
 
 const app = express();
 app.use(express.json());
 
 // Health check route
-// app.use('/health', healthRouter);
+app.use('/health', healthRouter);
 
 // Root endpoint serving HTML
 app.get('/', (req, res) => {
