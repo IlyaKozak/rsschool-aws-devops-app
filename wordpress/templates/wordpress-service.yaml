@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-wordpress
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-wordpress
+spec:
+  ports:
+    - name: {{ .Values.wordpress.portName }}
+      port: {{ .Values.wordpress.servicePort }}
+      targetPort: {{ .Values.wordpress.port }}
+  selector:
+    app: {{ .Release.Name }}-wordpress
+    tier: {{ .Release.Name }}-frontend
