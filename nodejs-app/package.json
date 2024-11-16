@@ -5,7 +5,8 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "start": "node app.js",
+    "start": "node src/app.js",
+    "build": "npm install && echo \"build is completed\"",
     "test": "echo \"testing...\" && exit 0"
   },
   "author": "Ilya Kozak",
