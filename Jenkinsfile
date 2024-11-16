@@ -2,9 +2,11 @@ pipeline {
   agent any
 
   environment {
-    HELM_VERSION = "v3.16.2"
+    HELM_VERSION     = "v3.16.2"
     HELM_INSTALL_DIR = "${env.HOME}/bin"
-    PATH = "${env.HELM_INSTALL_DIR}:${env.PATH}"
+    PATH             = "${env.HELM_INSTALL_DIR}:${env.PATH}"
+    MYSQL_ROOTPASS   = credentials('mysql-rootpass')
+    MYSQL_PASS       = credentials('mysql-pass')
   }
 
   stages {
@@ -29,15 +31,9 @@ pipeline {
       }
     }
 
-    stage('Checkout Repo') {
-      steps {
-        checkout scm
-      }
-    }
-
     stage('Install Helm Chart') {
       steps {
-        sh 'helm upgrade --install wordpress ./wordpress --namespace wordpress --create-namespace'
+        sh 'helm upgrade --install wordpress ./wordpress --namespace wordpress --create-namespace --set mysql.rootPass --set mysql.pass'
       }
     }
   }

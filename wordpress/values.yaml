@@ -22,8 +22,8 @@ mysql:
   pvcSize: 3Gi
   db: wordpress
   user: wordpress
-  rootPass: "WEJYYVdzT0RCag=="
-  pass: "dU5LZG92VDZDVQ=="
+  # rootPass: xxx
+  # pass: xxx
 
 ingress:
   enabled: true
