@@ -1,82 +1,148 @@
 pipeline {
-  agent any
+  agent {
+    kubernetes {
+      yaml """
+      apiVersion: v1
+      kind: Pod
+      spec:
+        containers:
+        - name: node
+          image: node:22-alpine
+          command:
+          - cat
+          tty: true
+        - name: docker
+          image: docker:27.4.0-rc.1-cli
+          command:
+          - cat
+          tty: true
+          volumeMounts:
+          - name: docker-socket
+            mountPath: /var/run/docker.sock
+          securityContext:
+            privileged: true
+        - name: aws-cli
+          image: amazon/aws-cli:latest
+          command:
+          - cat
+          tty: true
+        volumes:
+        - name: docker-socket
+          hostPath:
+            path: /var/run/docker.sock
+      """
+    }
+  }
 
   environment {
-    DOCKER_IMAGE     = "nodejs-app"
-    HELM_VERSION     = "v3.16.2"
-    HELM_INSTALL_DIR = "${env.HOME}/bin"
-    PATH             = "${env.HELM_INSTALL_DIR}:${env.PATH}"
+    DOCKER_IMAGE = "nodejs-app"
+    ECR_REPO_URI = "xxxx"
+    AWS_REGION = "eu-north-1"
+    SES_SENDER = "xxx"
+    SES_RECIPIENT = "xxx"
   }
 
   stages {
-    stage('Application build') {
+    stage('Install Dependencies') {
       steps {
-        sh 'npm run build'
+        container('node') {
+          sh 'npm install --prefix nodejs-app'
+        }
       }
     }
 
-    stage('Unit test execution') {
+    stage('Run Tests') {
       steps {
-        sh 'npm test'
+        container('node') {
+          sh 'npm test --prefix nodejs-app'
+        }
       }
     }
 
     stage('Build Docker Image') {
       steps {
-        script {
-          sh "docker build -t ${DOCKER_IMAGE} ."
+        container('docker') {
+          sh 'docker build -t $DOCKER_IMAGE nodejs-app'
         }
       }
     }
 
-    stage('Install Helm') {
+    stage('Get AWS ECR Login Password') {
       steps {
-        sh '''
-        mkdir -p $HELM_INSTALL_DIR
-        
-        curl -sSL https://get.helm.sh/helm-$HELM_VERSION-linux-arm64.tar.gz -o helm.tar.gz
-
-        tar -xzvf helm.tar.gz linux-arm64/helm --strip-components=1
-        mv helm $HELM_INSTALL_DIR/helm
-        
-        rm -f helm.tar.gz
-        '''
+        container('aws-cli') {
+          script {
+            def ecrPassword = sh(script: "aws ecr get-login-password --region $AWS_REGION", returnStdout: true).trim()
+            env.ECR_PASSWORD = ecrPassword
+          }
+        }
       }
     }
 
-    stage('Verify Helm Installation') {
+    stage('Docker Login to ECR') {
       steps {
-        sh 'helm version'
+        container('docker') {
+          script {
+            sh "docker login --username AWS --password ${env.ECR_PASSWORD} $ECR_REPO_URI"
+          }
+        }
       }
     }
 
-    // stage('Install Helm Chart') {
-    //   steps {
-    //     withCredentials([
-    //       string(credentialsId: 'mysql-rootpass', variable: 'MYSQL_ROOTPASS'),
-    //       string(credentialsId: 'mysql-pass', variable: 'MYSQL_PASS')
-    //     ]) {
-    //       script {
-    //         def encodedRootPass = sh(script: "echo -n ${MYSQL_ROOTPASS} | base64", returnStdout: true).trim()
-    //         def encodedPass = sh(script: "echo -n ${MYSQL_PASS} | base64", returnStdout: true).trim()
+    stage('Tag Docker Image') {
+      steps {
+        container('docker') {
+          sh 'docker tag $DOCKER_IMAGE:latest $ECR_REPO_URI:latest'
+        }
+      }
+    }
 
-    //         sh """
-    //         helm upgrade --install wordpress ./wordpress --namespace wordpress --create-namespace \
-    //           --set mysql.rootPass=${encodedRootPass} \
-    //           --set mysql.pass=${encodedPass}
-    //         """
-    //       }
-    //     }
-    //   }
-    // }
+    stage('Manual Approval') {
+      steps {
+        script {
+          input message: "Do you want to push the Docker image to ECR?", ok: "Yes, Push"
+        }
+      }
+    }
+
+    stage('Push Docker Image to ECR') {
+      steps {
+        container('docker') {
+          sh 'docker push $ECR_REPO_URI:latest'
+        }
+      }
+    }
   }
-
+  
   post {
     success {
-      echo 'Helm chart deployment completed successfully!'
+      script {
+        sendEmail("✅ Jenkins Pipeline Success", "✅ The Jenkins pipeline completed successfully.")
+      }
     }
     failure {
-      echo 'Helm chart deployment failed!'
+      script {
+        sendEmail("❌Jenkins Pipeline Failure", "❌The Jenkins pipeline failed. Please check the logs for details.")
+      }
     }
+    aborted {
+      script {
+        sendEmail("⛔Jenkins Pipeline Aborted", "⛔The Jenkins pipeline was manually aborted.")
+      }
+    }
+  }
+}
+
+def sendEmail(subject, body) {
+  container('aws-cli') {
+    sh """
+    aws ses send-email \
+      --from "$SES_SENDER" \
+      --destination "ToAddresses=$SES_RECIPIENT" \
+      --message '{
+        "Subject": {"Data": "${subject}"},
+        "Body": {"Text": {"Data": "${body}"}}
+      }' \
+      --region $AWS_REGION
+    """
   }
 }
