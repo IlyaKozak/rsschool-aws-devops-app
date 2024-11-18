@@ -1,0 +1,26 @@
+replicaCount: 1
+tag: latest
+port: 3000
+servicePort: 80
+portName: http
+ingress:
+  enabled: true
+  hostname: nodejs-app.kozak.day
+  path: /
+  pathType: ImplementationSpecific
+  annotations: 
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+
+awsRegion: eu-north-1
+# ecrRegistry: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com
+# ecrAuthString: --set ecrAuthString=$(aws ecr get-login-password --region <REGION> | base64)
+ecrTokenRefresherImage: public.ecr.aws/eks-anywhere/ecr-token-refresher:latest
+repository: aws-devops/nodejs-app
+initialEcrDockerConfigJson: |
+  {
+    "auths": {
+      "{{ .Values.ecrRegistry }}": {
+        "auth": "{{ .Values.ecrAuthString }}"
+      }
+    }
+  }

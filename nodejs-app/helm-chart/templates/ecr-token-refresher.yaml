@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecr-token-refresher
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: ecr-token-refresher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecr-token-refresher
+  template:
+    metadata:
+      labels:
+        app: ecr-token-refresher
+    spec:
+      containers:
+      - name: ecr-token-refresher
+        image: {{ .Values.ecrTokenRefresherImage }}
+        env:
+        - name: AWS_REGION
+          value: {{ .Values.awsRegion }}
+        - name: SECRET_NAME
+          value: ecr-registry-secret
+        - name: SECRET_NAMESPACE
+          value: {{ .Release.Namespace }}
+        - name: REGISTRY
+          value: {{ .Values.ecrRegistry }}
+        imagePullPolicy: IfNotPresent
