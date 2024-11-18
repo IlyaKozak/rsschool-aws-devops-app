@@ -12,24 +12,23 @@ pipeline {
           - cat
           tty: true
         - name: docker
-          image: docker:27.4.0-rc.1-cli
-          command:
-          - cat
-          tty: true
-          volumeMounts:
-          - name: docker-socket
-            mountPath: /var/run/docker.sock
+          image: docker:dind
           securityContext:
             privileged: true
+          env:
+          - name: DOCKER_TLS_CERTDIR
+            value: ""
+          volumeMounts:
+          - name: docker-graph-storage
+            mountPath: /var/lib/docker
         - name: aws-cli
           image: amazon/aws-cli:latest
           command:
           - cat
           tty: true
         volumes:
-        - name: docker-socket
-          hostPath:
-            path: /var/run/docker.sock
+        - name: docker-graph-storage
+          emptyDir: {}
       """
     }
   }
@@ -62,7 +61,15 @@ pipeline {
     stage('Build Docker Image') {
       steps {
         container('docker') {
-          sh 'docker build -t $DOCKER_IMAGE nodejs-app'
+          sh '''
+            until docker info > /dev/null 2>&1; do
+              echo "Waiting for Docker daemon to start..."
+              sleep 2
+            done
+            echo "Docker daemon is ready."
+
+            docker build -t $DOCKER_IMAGE:latest nodejs-app
+          '''
         }
       }
     }
@@ -81,9 +88,11 @@ pipeline {
     stage('Docker Login to ECR') {
       steps {
         container('docker') {
-          script {
-            sh "docker login --username AWS --password ${env.ECR_PASSWORD} $ECR_REPO_URI"
-          }
+          sh '''
+            set +x
+            echo $ECR_PASSWORD | docker login --username AWS --password-stdin $ECR_REPO_URI
+            set -x
+          '''
         }
       }
     }
