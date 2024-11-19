@@ -18,7 +18,7 @@ spec:
         app: {{ .Release.Name }}
     spec:
       containers:
-      - image: {{ .Values.ecrRegistry }}/{{ .Values.repository }}:{{ .Values.tag }}
+      - image: {{ .Values.registry }}/{{ .Values.image }}:{{ .Values.tag }}
         name: nodejs-app
         imagePullPolicy: IfNotPresent
         ports:
