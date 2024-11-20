@@ -150,7 +150,7 @@ pipeline {
               helm upgrade --install nodejs-app nodejs-app/helm-chart \
                 --namespace nodejs-app \
                 --create-namespace \
-                --set ecrRegistry=$ECR_REPO_URI \
+                --set registry=$ECR_REPO_URI \
                 --set ecrAuthString=$ECR_TOKEN \
                 --set ingress.hostname=app.$DOMAIN \
                 -f nodejs-app/helm-chart/values.yaml
