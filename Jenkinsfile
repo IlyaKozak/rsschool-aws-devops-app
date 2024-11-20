@@ -26,6 +26,11 @@ pipeline {
           command:
           - cat
           tty: true
+        - name: helm
+          image: alpine/helm:latest
+          command:
+          - cat
+          tty: true
         volumes:
         - name: docker-graph-storage
           emptyDir: {}
@@ -35,10 +40,7 @@ pipeline {
 
   environment {
     DOCKER_IMAGE = "nodejs-app"
-    ECR_REPO_URI = "xxxx"
     AWS_REGION = "eu-north-1"
-    SES_SENDER = "xxx"
-    SES_RECIPIENT = "xxx"
   }
 
   stages {
@@ -88,11 +90,15 @@ pipeline {
     stage('Docker Login to ECR') {
       steps {
         container('docker') {
-          sh '''
-            set +x
-            echo $ECR_PASSWORD | docker login --username AWS --password-stdin $ECR_REPO_URI
-            set -x
-          '''
+          withCredentials([
+            string(credentialsId: 'ecr-repo-uri-id', variable: 'ECR_REPO_URI')
+          ]) {
+            sh '''
+              set +x
+              echo $ECR_PASSWORD | docker login --username AWS --password-stdin $ECR_REPO_URI
+              set -x
+            '''
+          }
         }
       }
     }
@@ -100,7 +106,11 @@ pipeline {
     stage('Tag Docker Image') {
       steps {
         container('docker') {
-          sh 'docker tag $DOCKER_IMAGE:latest $ECR_REPO_URI:latest'
+          withCredentials([
+            string(credentialsId: 'ecr-repo-uri-id', variable: 'ECR_REPO_URI')
+          ]) {
+            sh 'docker tag $DOCKER_IMAGE:latest $ECR_REPO_URI:latest'
+          }
         }
       }
     }
@@ -116,7 +126,37 @@ pipeline {
     stage('Push Docker Image to ECR') {
       steps {
         container('docker') {
-          sh 'docker push $ECR_REPO_URI:latest'
+          withCredentials([
+            string(credentialsId: 'ecr-repo-uri-id', variable: 'ECR_REPO_URI')
+          ]) {
+            sh 'docker push $ECR_REPO_URI:latest'
+          }
+        }
+      }
+    }
+
+    stage('Deploy Helm Chart') {
+      steps {
+        container('helm') {
+          withCredentials([
+            string(credentialsId: 'domain-id', variable: 'DOMAIN'),
+            string(credentialsId: 'ecr-repo-uri-id', variable: 'ECR_REPO_URI')
+          ]) {
+            script {
+              def ecrAuthString = "AWS:$ECR_PASSWORD".getBytes('UTF-8').encodeBase64().toString()
+              env.ECR_TOKEN = ecrAuthString
+
+              sh """
+              helm upgrade --install nodejs-app nodejs-app/helm-chart \
+                --namespace nodejs-app \
+                --create-namespace \
+                --set ecrRegistry=$ECR_REPO_URI \
+                --set ecrAuthString=$ECR_TOKEN \
+                --set ingress.hostname=app.$DOMAIN \
+                -f nodejs-app/helm-chart/values.yaml
+              """
+            }
+          }
         }
       }
     }
@@ -142,16 +182,21 @@ pipeline {
 }
 
 def sendEmail(subject, body) {
-  container('aws-cli') {
-    sh """
-    aws ses send-email \
-      --from "$SES_SENDER" \
-      --destination "ToAddresses=$SES_RECIPIENT" \
-      --message '{
-        "Subject": {"Data": "${subject}"},
-        "Body": {"Text": {"Data": "${body}"}}
-      }' \
-      --region $AWS_REGION
-    """
+  withCredentials([
+    string(credentialsId: 'ses-sender-id', variable: 'SES_SENDER'),
+    string(credentialsId: 'ses-recipient-id', variable: 'SES_RECIPIENT')
+  ]) {
+    container('aws-cli') {
+      sh """
+      aws ses send-email \
+        --from "$SES_SENDER" \
+        --destination "ToAddresses=$SES_RECIPIENT" \
+        --message '{
+          "Subject": {"Data": "${subject}"},
+          "Body": {"Text": {"Data": "${body}"}
+        }}' \
+        --region $AWS_REGION
+      """
+    }
   }
 }

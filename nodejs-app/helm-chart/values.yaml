@@ -6,7 +6,6 @@ servicePort: 80
 portName: http
 ingress:
   enabled: true
-  hostname: example.com
   path: /
   pathType: ImplementationSpecific
   annotations: 
