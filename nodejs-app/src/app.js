@@ -3,6 +3,7 @@ import { router as healthRouter } from './routes/health.js';
 import { router as metadataRouter } from './routes/metadata.js';
 
 const app = express();
+app.disable('x-powered-by');
 app.use(express.json());
 
 // Health check route
