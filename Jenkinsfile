@@ -44,7 +44,7 @@ pipeline {
   }
 
   stages {
-    stage('Install Dependencies') {
+    stage('Build - Install Dependencies') {
       steps {
         container('node') {
           sh 'npm install --prefix nodejs-app'
@@ -52,15 +52,51 @@ pipeline {
       }
     }
 
-    stage('Run Tests') {
+    stage('Tests') {
       steps {
         container('node') {
           sh 'npm test --prefix nodejs-app'
         }
       }
     }
+    
+    stage('SonarQube Analysis') {
+      steps {
+        container('node') {
+          script {
+            sh """
+              apk add --no-cache -q openjdk17
+              export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+              export PATH=$JAVA_HOME/bin:$PATH
+              java -version
+            """
 
-    stage('Build Docker Image') {
+            def scannerHome = tool 'SonarQubeScanner'
+            withSonarQubeEnv('SonarQube') {
+              sh """
+                ${scannerHome}/bin/sonar-scanner \
+                  -Dsonar.projectKey=nodejs-app \
+                  -Dsonar.sources=nodejs-app/src \
+                  -Dsonar.host.url=http://sonarqube-sonarqube.sonarqube:9000 \
+                  -Dsonar.login=${env.SONAR_AUTH_TOKEN}
+              """
+            }
+          }
+        }
+      }
+    }
+
+    stage('SonarQube Quality Gate') {
+      steps {
+        script {
+          timeout(time: 1, unit: 'MINUTES') {
+            waitForQualityGate abortPipeline: true
+          }
+        }
+      }
+    }
+
+    stage('Docker Image Build') {
       steps {
         container('docker') {
           sh '''
@@ -76,7 +112,7 @@ pipeline {
       }
     }
 
-    stage('Get AWS ECR Login Password') {
+    stage('Get AWS ECR Password') {
       steps {
         container('aws-cli') {
           script {
@@ -103,7 +139,7 @@ pipeline {
       }
     }
 
-    stage('Tag Docker Image') {
+    stage('Docker Tag Image') {
       steps {
         container('docker') {
           withCredentials([
@@ -123,7 +159,7 @@ pipeline {
       }
     }
 
-    stage('Push Docker Image to ECR') {
+    stage('Docker Push Image to ECR') {
       steps {
         container('docker') {
           withCredentials([
@@ -135,7 +171,7 @@ pipeline {
       }
     }
 
-    stage('Deploy Helm Chart') {
+    stage('Helm Deploy') {
       steps {
         container('helm') {
           withCredentials([
