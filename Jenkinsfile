@@ -86,14 +86,17 @@ pipeline {
               export PATH=$JAVA_HOME/bin:$PATH
               java -version
             """
-
             def scannerHome = tool 'SonarQubeScanner'
             withSonarQubeEnv('SonarQube') {
               sh """
                 ${scannerHome}/bin/sonar-scanner \
                   -Dsonar.projectKey=nodejs-app \
                   -Dsonar.sources=nodejs-app/src \
+                  -Dsonar.tests=nodejs-app/src/__tests__ \
+                  -Dsonar.test.inclusions=**/*.test.ts= \
                   -Dsonar.host.url=http://sonarqube-sonarqube.sonarqube:9000 \
+                  -Dsonar.javascript.lcov.reportPaths=nodejs-app/coverage/lcov.info \
+                  -Dsonar.typescript.lcov.reportPaths=nodejs-app/coverage/lcov.info \
                   -Dsonar.login=${env.SONAR_AUTH_TOKEN}
               """
             }
