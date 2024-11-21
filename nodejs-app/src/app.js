@@ -1,11 +1,15 @@
 import express from 'express';
 import { router as healthRouter } from './routes/health.js';
+import { router as metadataRouter } from './routes/metadata.js';
 
 const app = express();
 app.use(express.json());
 
 // Health check route
 app.use('/health', healthRouter);
+
+// Metadata route
+app.use('/metadata', metadataRouter);
 
 // Root endpoint serving HTML
 app.get('/', (req, res) => {
@@ -15,7 +19,7 @@ app.get('/', (req, res) => {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Node.js Kubernetes App</title>
+            <title>Node.js App - Task 6: Application Deployment via Jenkins Pipeline</title>
             <style>
                 body {
                     font-family: Arial, sans-serif;
@@ -35,11 +39,14 @@ app.get('/', (req, res) => {
             </style>
         </head>
         <body>
-            <h1>Welcome to the Node.js Kubernetes App</h1>
-            <p>This application is running in a Kubernetes cluster.</p>
+            <h1>Welcome to the Node.js App</h1>
+            <h3><a href="https://rs.school/courses/aws-devops">RSSchool AWS DevOps Course 🚀</a></h3>
+            <p>Task 6: Application Deployment via Jenkins Pipeline.</p>
             <p>
-                <a href="/health">Check Health Status</a>
+                <a href="/metadata">EC2 Metadata 🕵</a> | 
+                <a href="/health">Health Status 💗</a>
             </p>
+            <img src="https://rs.school/_next/static/media/rs-slope-aws-dev.219b3d33.webp" width="350" />
         </body>
         </html>
     `);
