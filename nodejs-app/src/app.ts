@@ -2,7 +2,7 @@ import express from 'express';
 import { router as healthRouter } from './routes/health';
 import { router as metadataRouter } from './routes/metadata';
 
-const app = express();
+export const app = express();
 app.disable('x-powered-by');
 app.use(express.json());
 
