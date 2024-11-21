@@ -1,6 +1,5 @@
 import express from 'express';
 import { router as healthRouter } from './routes/health';
-import { router as metadataRouter } from './routes/metadata';
 
 export const app = express();
 app.disable('x-powered-by');
@@ -9,11 +8,8 @@ app.use(express.json());
 // Health check route
 app.use('/health', healthRouter);
 
-// Metadata route
-app.use('/metadata', metadataRouter);
-
 // Root endpoint serving HTML
-app.get('/', (req, res) => {
+app.get('/', (_, res) => {
   res.send(`
         <!DOCTYPE html>
         <html lang="en">
@@ -44,7 +40,6 @@ app.get('/', (req, res) => {
             <h3><a href="https://rs.school/courses/aws-devops">RSSchool AWS DevOps Course 🚀</a></h3>
             <p>Task 6: Application Deployment via Jenkins Pipeline.</p>
             <p>
-                <a href="/metadata">EC2 Metadata 🕵</a> | 
                 <a href="/health">Health Status 💗</a>
             </p>
             <img src="https://rs.school/_next/static/media/rs-slope-aws-dev.219b3d33.webp" width="350" />
