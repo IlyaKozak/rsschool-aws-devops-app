@@ -44,7 +44,7 @@ pipeline {
   }
 
   stages {
-    stage('Build - Install Dependencies') {
+    stage('Install App Dependencies') {
       steps {
         container('node') {
           sh 'npm install --prefix nodejs-app'
@@ -52,10 +52,26 @@ pipeline {
       }
     }
 
-    stage('Tests') {
+    stage('Application Build') {
+      steps {
+        container('node') {
+          sh 'npm run build --prefix nodejs-app'
+        }
+      }
+    }
+
+    stage('Unit Tests') {
       steps {
         container('node') {
           sh 'npm test --prefix nodejs-app'
+        }
+      }
+    }
+
+    stage('Tests Coverage') {
+      steps {
+        container('node') {
+          sh 'npm run test:coverage --prefix nodejs-app'
         }
       }
     }
