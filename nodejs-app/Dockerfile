@@ -1,3 +1,15 @@
+FROM node:22-alpine as build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY src ./src
+
+RUN npm run build
+
+
 FROM node:22-alpine
 
 WORKDIR /app
@@ -5,8 +17,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --production
 
-COPY src ./src
+COPY --from=build /app/dist ./dist
 
 EXPOSE 3000
 
-CMD ["node", "src/app.js"]
+CMD ["node", "dist/app.js"]
