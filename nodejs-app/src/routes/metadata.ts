@@ -23,7 +23,7 @@ async function getIMDSToken() {
   }
 }
 
-async function fetchMetadata(path = '', token) {
+async function fetchMetadata(path = '', token: string) {
   try {
     const url = `${metadataUrl}/${path}`;
     const response = await axios.get(url, {
@@ -36,8 +36,8 @@ async function fetchMetadata(path = '', token) {
     const data = response.data;
 
     if (data.endsWith('/')) {
-      const items = data.split('\n').filter((item) => item);
-      const metadata = {};
+      const items = data.split('\n').filter((item: string) => item);
+      const metadata: { [key: string]: string } = {};
 
       for (const item of items) {
         metadata[item] = await fetchMetadata(`${path}/${item}`, token);

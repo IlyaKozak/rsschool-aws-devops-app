@@ -1,6 +1,6 @@
 import express from 'express';
-import { router as healthRouter } from './routes/health.js';
-import { router as metadataRouter } from './routes/metadata.js';
+import { router as healthRouter } from './routes/health';
+import { router as metadataRouter } from './routes/metadata';
 
 const app = express();
 app.disable('x-powered-by');
