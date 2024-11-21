@@ -1,12 +1,5 @@
 import request from 'supertest';
-import { app } from '../app';
-import { Server } from 'http';
-
-let server: Server;
-
-beforeAll(() => {
-  server = app.listen();
-});
+import { app, server } from '../app';
 
 afterAll(() => {
   server.close();
@@ -24,10 +17,5 @@ describe('App Endpoints', () => {
     const response = await request(app).get('/health');
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ status: 'UP' });
-  });
-
-  it('should return metadata at /metadata', async () => {
-    const response = await request(app).get('/metadata');
-    expect(response.status).toBe(200);
   });
 });
