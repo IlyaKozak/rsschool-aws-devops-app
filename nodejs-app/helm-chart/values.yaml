@@ -1,0 +1,21 @@
+replicaCount: 1
+image: aws-devops/nodejs-app
+tag: latest
+port: 3000
+servicePort: 80
+portName: http
+ingress:
+  enabled: true
+  path: /
+  pathType: ImplementationSpecific
+  annotations: 
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+
+initialEcrDockerConfigJson: |
+  {
+    "auths": {
+      "{{ .Values.registry }}": {
+        "auth": "{{ .Values.ecrAuthString }}"
+      }
+    }
+  }
